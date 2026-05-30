@@ -26,7 +26,7 @@
 :root{--fd:'Syne',sans-serif;--fm:'JetBrains Mono',monospace;--r:16px;--rs:10px;--ease:cubic-bezier(.4,0,.2,1);--spring:cubic-bezier(.34,1.56,.64,1);--nh:60px;--th:76px;--it:env(safe-area-inset-top,0px);--ib:env(safe-area-inset-bottom,0px);--il:env(safe-area-inset-left,0px);--ir:env(safe-area-inset-right,0px);}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 html{height:100%;overflow:hidden;}
-body{background:var(--bg);color:var(--tx);font-family:var(--fm);height:100%;overflow:hidden;padding-top:var(--it);padding-bottom:var(--ib);padding-left:var(--il);padding-right:var(--ir);-webkit-font-smoothing:antialiased;user-select:none;transition:background .3s,color .3s;}
+body{background:var(--bg);color:var(--tx);font-family:var(--fm);height:100%;overflow:hidden;padding-top:var(--it);padding-bottom:var(--ib);padding-left:var(--il);padding-right:var(--ir);-webkit-font-smoothing:antialiased;user-select:none;transition:background .3s,color .3s;overscroll-behavior:none;}
 @media(display-mode:standalone){body{padding-top:max(var(--it),20px);}}
 body.grain::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:.5;}
 body.glowbg #glow1{position:fixed;width:60vw;height:60vw;max-width:500px;max-height:500px;background:radial-gradient(circle,var(--aglow),transparent 70%);border-radius:50%;top:-20%;right:-10%;pointer-events:none;z-index:0;animation:gd1 12s ease-in-out infinite alternate;}
@@ -186,7 +186,7 @@ body.anim .brow:hover{border-color:var(--brd2);box-shadow:inset 3px 0 0 var(--ac
 .br-name{flex:1;font-size:13px;font-weight:500;}
 .br-note{font-size:10px;color:var(--tx3);margin-top:1px;}
 .br-spent{font-size:11px;color:var(--tx2);white-space:nowrap;}
-.br-edit{background:var(--elev);border:1px solid var(--brd2);color:var(--tx);font-size:13px;font-weight:600;width:80px;text-align:right;padding:5px 9px;border-radius:8px;outline:none;font-family:var(--fm);transition:all .2s;}
+.br-edit{background:var(--elev);border:1px solid var(--brd2);color:var(--tx);font-size:13px;font-weight:600;width:72px;min-width:0;text-align:right;padding:5px 7px;border-radius:8px;outline:none;font-family:var(--fm);transition:all .2s;}
 .br-edit:focus{border-color:var(--acc);box-shadow:0 0 0 3px var(--adim);}
 .br-del{background:none;border:1px solid var(--brd);color:var(--tx3);width:28px;height:28px;border-radius:7px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;margin-left:4px;}
 .br-del:hover{border-color:var(--red);color:var(--red);background:rgba(248,113,113,.1);}
@@ -404,6 +404,214 @@ body.anim .modal-bg.open .modal{animation:slideUp .28s var(--ease);}
   .donut-wrap{flex-direction:column;}
   .donut-svg{width:120px;height:120px;}
 }
+
+/* ── iOS RESPONSIVE OVERHAUL ─────────────────────────────────────────────── */
+
+/* Force everything to fit viewport width — no horizontal scroll ever */
+* { max-width: 100%; }
+input, select { max-width: 100% !important; }
+
+/* ── SYNC BAR — compact pill instead of full bar ─────────────────────────── */
+#sync-bar {
+  position: fixed;
+  top: calc(var(--nh) + var(--it) + 4px);
+  right: 12px;
+  left: auto !important;
+  width: auto !important;
+  background: var(--elev);
+  border: 1px solid var(--brd2);
+  border-radius: 99px;
+  padding: 4px 10px;
+  font-size: 10px;
+  display: none;
+  align-items: center;
+  gap: 6px;
+  z-index: 150;
+  transform: none !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 2px 12px #0006;
+}
+#sync-bar.visible { display: flex; }
+/* Hide push/pull/sync text buttons in bar on mobile — use the badge instead */
+@media(max-width:768px) {
+  .sync-btns { display: none; }
+  #sync-bar { top: calc(var(--nh) + var(--it) + 6px); }
+  /* No extra padding for sync bar — it floats over content */
+  .content { padding-top: 0 !important; }
+}
+
+/* ── METRICS — single column on small phones, 2-col max on mobile ─────────── */
+@media(max-width:768px) {
+  .m4 { grid-template-columns: 1fr 1fr !important; }
+  .m3 { grid-template-columns: 1fr 1fr !important; }
+  .m2 { grid-template-columns: 1fr 1fr !important; }
+  .fg4 { grid-template-columns: 1fr 1fr !important; }
+  .fg3 { grid-template-columns: 1fr 1fr !important; }
+  .fg2 { grid-template-columns: 1fr 1fr !important; }
+}
+@media(max-width:400px) {
+  .m4 { grid-template-columns: 1fr 1fr !important; }
+  .m3 { grid-template-columns: 1fr !important; }
+  .m2 { grid-template-columns: 1fr !important; }
+  .fg2 { grid-template-columns: 1fr !important; }
+  .fg3 { grid-template-columns: 1fr !important; }
+  .fg4 { grid-template-columns: 1fr 1fr !important; }
+}
+
+/* ── BUDGET ROWS — fix cut-off on right ──────────────────────────────────── */
+@media(max-width:768px) {
+  .br-top { flex-wrap: wrap; gap: 6px; }
+  .br-edit {
+    width: 72px !important;
+    font-size: 12px !important;
+    padding: 4px 6px !important;
+  }
+  .br-spent { font-size: 10px !important; }
+  .br-name { font-size: 12px !important; min-width: 0; flex: 1; }
+  .brow { padding: 11px 12px !important; overflow: hidden; }
+}
+
+/* ── PAGE PADDING — give content room to breathe ─────────────────────────── */
+@media(max-width:768px) {
+  .page { padding: 16px 14px calc(var(--tab-h) + 20px) 14px !important; }
+  .ph-title { font-size: 22px !important; }
+  .mc { padding: 12px 12px !important; }
+  .mc-val { font-size: 18px !important; }
+}
+
+/* ── TOP NAV — tighten on mobile ─────────────────────────────────────────── */
+@media(max-width:768px) {
+  .topnav { padding: 0 12px !important; gap: 8px !important; }
+  .logo-text { font-size: 15px !important; }
+  .logo-sub { display: none; }
+  /* Hide most header buttons — keep only alert + sync badge */
+  .topnav-right .hbtn:not(:first-child) { display: none !important; }
+  .topnav-right { gap: 6px !important; }
+}
+
+/* ── BOTTOM TAB BAR — 5 tabs, better sizing ──────────────────────────────── */
+@media(max-width:768px) {
+  .tab-bar {
+    padding: 6px 0 calc(6px + var(--ib)) !important;
+    gap: 0 !important;
+  }
+  .tb-item { padding: 5px 8px !important; border-radius: 8px !important; }
+  .tb-icon { font-size: 22px !important; }
+  .tb-label { font-size: 9px !important; }
+  --tab-h: 72px;
+}
+
+/* ── MORE SHEET — full page grid ─────────────────────────────────────────── */
+.more-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+}
+.more-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 14px 8px;
+  background: var(--elev);
+  border: 1px solid var(--brd);
+  border-radius: var(--r);
+  cursor: pointer;
+  transition: all .15s;
+  font-size: 11px;
+  color: var(--tx2);
+  text-align: center;
+  font-family: var(--fm);
+  -webkit-tap-highlight-color: transparent;
+}
+.more-btn:active { background: var(--adim); color: var(--acc); border-color: var(--aglow); transform: scale(.96); }
+.more-btn-icon { font-size: 24px; line-height: 1; }
+
+/* ── FORMS on mobile ─────────────────────────────────────────────────────── */
+@media(max-width:768px) {
+  .finp { padding: 10px 12px !important; font-size: 16px !important; } /* 16px prevents iOS zoom */
+  .finp::placeholder { font-size: 14px; }
+  select.finp { font-size: 16px !important; } /* prevent iOS zoom on select */
+  .btn { padding: 11px 16px !important; font-size: 13px !important; }
+  .btn-g { padding: 9px 12px !important; font-size: 12px !important; }
+  .btn-row { gap: 6px !important; }
+}
+
+/* ── DONUT CHART — fit on mobile ─────────────────────────────────────────── */
+@media(max-width:768px) {
+  .donut-wrap { flex-direction: column !important; align-items: flex-start !important; }
+  .donut-svg { width: 110px !important; height: 110px !important; }
+}
+
+/* ── TRANSACTION ITEMS ────────────────────────────────────────────────────── */
+@media(max-width:768px) {
+  .tx-item { padding: 10px 12px !important; }
+  .tx-name { font-size: 12px !important; }
+  .tx-meta { font-size: 9px !important; }
+  .tx-amt { font-size: 12px !important; }
+}
+
+/* ── GOAL CARDS ────────────────────────────────────────────────────────────── */
+@media(max-width:768px) {
+  .goal-card { padding: 14px 12px !important; }
+  .goal-saved { font-size: 17px !important; }
+  .goal-actions { flex-wrap: wrap !important; gap: 6px !important; }
+}
+
+/* ── DEBT / NW / REC items ─────────────────────────────────────────────────── */
+@media(max-width:768px) {
+  .debt-item, .nw-item, .rec-item, .inc-item { padding: 10px 12px !important; }
+}
+
+/* ── MODAL — full width on small screens ──────────────────────────────────── */
+@media(max-width:480px) {
+  .modal { padding: 20px 16px calc(20px + var(--ib)) !important; }
+  .modal-title { font-size: 17px !important; }
+  .fg2, .fg3, .fg4 { grid-template-columns: 1fr !important; }
+}
+
+/* ── PAYCHECK ALLOC ─────────────────────────────────────────────────────────── */
+@media(max-width:768px) {
+  .al-item { padding: 8px 10px !important; font-size: 12px !important; }
+  .al-bar { width: 36px !important; }
+}
+
+/* ── SETTINGS ────────────────────────────────────────────────────────────── */
+@media(max-width:768px) {
+  .sr { padding: 12px 14px !important; font-size: 12px !important; }
+  .sr-lbl { font-size: 12px !important; }
+  .sr-desc { font-size: 10px !important; }
+  .set-inp { width: 90px !important; font-size: 12px !important; }
+}
+
+/* ── PREVENT HORIZONTAL OVERFLOW ─────────────────────────────────────────── */
+@media(max-width:768px) {
+  .page, .content { overflow-x: hidden !important; }
+  .btbl, .tx-list, .mg, .fg { overflow: visible !important; }
+}
+
+/* ── CALENDAR ────────────────────────────────────────────────────────────── */
+@media(max-width:768px) {
+  .cal-day { font-size: 10px !important; border-radius: 6px !important; }
+  .cal-dn { font-size: 8px !important; }
+}
+
+/* ── TARGETS page ────────────────────────────────────────────────────────── */
+@media(max-width:768px) {
+  .sc-card { padding: 12px 14px !important; }
+  .sc-title { font-size: 13px !important; }
+}
+
+/* ── TOPNAV right — show only the most important buttons on mobile ─────────── */
+@media(max-width:768px) {
+  /* Show: user badge + alert bell only */
+  #notif-btn { display: flex !important; }
+  .user-badge { display: flex !important; }
+}
+
+@media(max-width:768px){.mob-hide{display:none!important;}}
 </style>
 </head>
 <body data-theme="obsidian" class="anim grain glowbg glowbars">
@@ -461,11 +669,11 @@ body.anim .modal-bg.open .modal{animation:slideUp .28s var(--ease);}
       <div><div class="user-pin" id="user-pin-lbl">–</div><div class="user-mode" id="user-mode-lbl">offline</div></div>
     </div>
     <button class="hbtn" onclick="nav('notifications')" title="Alerts">🔔<div class="notif-pip" id="notif-pip"></div></button>
-    <button class="hbtn" onclick="exportData()" title="Export JSON">💾</button>
-    <button class="hbtn" onclick="triggerImport()" title="Import JSON">📂</button>
-    <button class="hbtn" onclick="exportCSV()" title="Export CSV">📊</button>
-    <button class="hbtn" onclick="showInstallModal()" title="Install app">📲</button>
-    <button class="hbtn" onclick="confirmReset()" title="Reset data">🔄</button>
+    <button class="hbtn" onclick="exportData()" title="Export JSON" class="hbtn mob-hide">💾</button>
+    <button class="hbtn" onclick="triggerImport()" title="Import JSON" class="hbtn mob-hide">📂</button>
+    <button class="hbtn" onclick="exportCSV()" title="Export CSV" class="hbtn mob-hide">📊</button>
+    <button class="hbtn" onclick="showInstallModal()" title="Install app" class="hbtn mob-hide">📲</button>
+    <button class="hbtn" onclick="confirmReset()" title="Reset data" class="hbtn mob-hide">🔄</button>
   </div>
 </nav>
 
@@ -508,7 +716,7 @@ body.anim .modal-bg.open .modal{animation:slideUp .28s var(--ease);}
 </aside>
 
 <!-- CONTENT -->
-<main class="content" id="content">
+<main class="content" id="content" style="-webkit-overflow-scrolling:touch;overscroll-behavior:none;">
 <div id="p-dashboard" class="page on">
   <div class="ph"><div class="ph-eyebrow" id="dash-eyebrow"></div><div class="ph-title">Dashboard</div><div class="ph-sub">Your financial snapshot</div></div>
   <div class="mg m4" id="dm4"></div><div class="mg m3" id="dm3"></div>
@@ -759,7 +967,7 @@ body.anim .modal-bg.open .modal{animation:slideUp .28s var(--ease);}
   <div class="tb-item" onclick="nav('budget')"><div class="tb-icon">💰</div><div class="tb-label">Budget</div></div>
   <div class="tb-item" onclick="nav('spending')"><div class="tb-icon">🧾</div><div class="tb-label">Spend</div></div>
   <div class="tb-item" onclick="nav('savings')"><div class="tb-icon">🏦</div><div class="tb-label">Save</div></div>
-  <div class="tb-item" onclick="showMoreSheet()"><div class="tb-icon">⋯</div><div class="tb-label">More</div></div>
+  <div class="tb-item" id="tb-more" onclick="showMoreSheet()"><div class="tb-icon">☰</div><div class="tb-label">Menu</div></div>
 </nav>
 </div><!-- .app -->
 <input type="file" id="import-file" accept=".json" style="display:none" onchange="doImport(event)"/>
@@ -1175,7 +1383,23 @@ function renderPage(n){({dashboard:renderDashboard,budget:renderBudget,spending:
 /* ═══ SIDEBAR ════════════════════════════════════════════════════════════════ */
 function updateSidebar(){const t=tb(),s=ts(),l=lo();const over=S.expenses.filter(e=>spentBy(e.name)>e.budget).length;const nb=g("nb-over");nb.textContent=over;nb.style.display=over>0?"flex":"none";g("notif-pip").style.display=over>0?"block":"none";g("sb-stats").innerHTML=`<div class="sb-stat"><span class="sb-stat-l">Budget</span><span class="sb-stat-v">${fmt(t)}</span></div><div class="sb-stat"><span class="sb-stat-l">Spent</span><span class="sb-stat-v">${fmt(s)}</span></div><div class="sb-stat"><span class="sb-stat-l">Leftover</span><span class="sb-stat-v" style="color:${hc(l)}">${fmt(Math.abs(l))}</span></div><div class="sb-stat"><span class="sb-stat-l">Take-home</span><span class="sb-stat-v">${fmt(th())}</span></div>`;}
 let ckT;function startClock(){if(ckT)clearInterval(ckT);ckT=setInterval(()=>{const e=g("sb-clock");if(e)e.textContent=new Date().toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit",second:"2-digit"});},1000);}
-function showMoreSheet(){openModal(`<div class="modal-title">All Pages</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">${[["📊","Dashboard","dashboard"],["💰","Budget","budget"],["🧾","Spending","spending"],["💸","Income","income"],["🔁","Recurring","recurring"],["📅","Calendar","calendar"],["💵","Paycheck","paycheck"],["🏦","Savings","savings"],["💳","Debt","debt"],["📈","Net Worth","networth"],["🏠","Move-In","movein"],["🥧","Reports","reports"],["📉","Trends","trends"],["↔️","Compare","compare"],["🎯","Targets","targets"],["🔔","Alerts","notifications"],["⚙️","Settings","settings"]].map(([ic,lb,pg])=>`<button class="btn-g" style="display:flex;align-items:center;gap:8px;justify-content:flex-start;padding:10px 12px" onclick="nav('${pg}');closeModal()">${ic} ${lb}</button>`).join("")}</div>`);}
+function showMoreSheet(){
+  const pages=[
+    ["📊","Dashboard","dashboard"],["💸","Income","income"],
+    ["🔁","Recurring","recurring"],["📅","Calendar","calendar"],
+    ["💵","Paycheck","paycheck"],["💳","Debt","debt"],
+    ["📈","Net Worth","networth"],["🏠","Move-In","movein"],
+    ["🥧","Reports","reports"],["📉","Trends","trends"],
+    ["↔️","Compare","compare"],["🎯","Targets","targets"],
+    ["🔔","Alerts","notifications"],["⚙️","Settings","settings"]
+  ];
+  openModal(`<div class="modal-title" style="margin-bottom:14px">Menu</div>
+  <div class="more-grid">
+    ${pages.map(([ic,lb,pg])=>`<button class="more-btn" onclick="nav('${pg}');closeModal()">
+      <span class="more-btn-icon">${ic}</span>${lb}
+    </button>`).join('')}
+  </div>`);
+}
 
 /* ═══ DASHBOARD ══════════════════════════════════════════════════════════════ */
 function renderDashboard(){
