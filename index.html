@@ -1915,7 +1915,7 @@ function obSave1() {
   obData.state = document.getElementById('ob-state')?.value || 'TX';
   // Save state to settings immediately
   S.settings.taxState = obData.state;
-  S.settings.location = obData.name ? obData.name + ''s Budget' : '';
+  S.settings.location = obData.name ? obData.name + "'s Budget" : '';
   const locEl = document.getElementById('top-loc');
   if (locEl) locEl.textContent = S.settings.location;
   obNext();
