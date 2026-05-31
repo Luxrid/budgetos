@@ -1838,32 +1838,28 @@ function renderObStep() {
 
   // ── STEP 4: Tour ─────────────────────────────────────────────────────────
   else if (obStep === 4) {
-    content = `
-      ${backBtn}
-      <span class="ob-icon">🗺️</span>
-      <div class="ob-title">Here's how it works</div>
-      <div class="ob-sub" style="text-align:left;margin-bottom:16px">A quick tour of the app.</div>
-      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
-        ${[
-          ['📊','Dashboard','Your financial snapshot — spending vs budget, today's limit, recent transactions.'],
-          ['💰','Budget','Set your monthly budget per category. Tap any amount to edit it.'],
-          ['🧾','Spending','Log every purchase here. Tap ✏️ on any item to edit it later.'],
-          ['🏦','Savings','Set goals like Emergency Fund or Car. Track deposits and milestones.'],
-          ['☰','Menu tab','On mobile, tap Menu to reach all 17 pages — paycheck planner, debt tracker, reports, and more.'],
-          ['☁️','Sync bar','The green dot means your data is synced. Tap Push ↑ to upload, Pull ↓ to download.'],
-          ['⚙️','Settings','Change your theme, wage, tax rate, daily limit, and more.'],
-        ].map(([ic,title,desc]) => `
-          <div style="display:flex;align-items:flex-start;gap:10px">
-            <span style="font-size:20px;flex-shrink:0;margin-top:1px">${ic}</span>
-            <div>
-              <div style="font-size:13px;font-weight:600;font-family:var(--fd)">${title}</div>
-              <div style="font-size:11px;color:var(--tx2);margin-top:2px;line-height:1.5">${desc}</div>
-            </div>
-          </div>
-        `).join('')}
-      </div>
-      <button class="ob-btn" onclick="obFinish()">Start using Budget OS 🚀</button>
-    `;
+    const tourItems = [
+      ['📊','Dashboard','Your financial snapshot — spending vs budget, daily limit, recent transactions.'],
+      ['💰','Budget','Set your monthly budget per category. Tap any amount to edit it.'],
+      ['🧾','Spending','Log every purchase. Tap the pencil icon on any item to edit it.'],
+      ['🏦','Savings','Set goals like Emergency Fund or Car. Track deposits and milestones.'],
+      ['☰','Menu tab','On mobile, tap Menu to reach all 17 pages including paycheck planner and debt tracker.'],
+      ['☁️','Sync bar','Green dot = synced. Push uploads your data, Pull downloads the latest.'],
+      ['⚙️','Settings','Change your theme, wage, tax rate, daily limit, and more.'],
+    ];
+    const tourHTML = tourItems.map(function(item) {
+      return '<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px">'
+        + '<span style="font-size:20px;flex-shrink:0;margin-top:1px">' + item[0] + '</span>'
+        + '<div><div style="font-size:13px;font-weight:600;font-family:var(--fd)">' + item[1] + '</div>'
+        + '<div style="font-size:11px;color:var(--tx2);margin-top:2px;line-height:1.5">' + item[2] + '</div>'
+        + '</div></div>';
+    }).join('');
+    content = backBtn
+      + '<span class="ob-icon">🗺️</span>'
+      + '<div class="ob-title">Here is how it works</div>'
+      + '<div class="ob-sub" style="text-align:left;margin-bottom:16px">A quick tour of the app.</div>'
+      + '<div style="display:flex;flex-direction:column;gap:2px;margin-bottom:20px">' + tourHTML + '</div>'
+      + '<button class="ob-btn" onclick="obFinish()">Start using Budget OS</button>';
   }
 
   card.innerHTML = `
