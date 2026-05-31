@@ -682,7 +682,10 @@ input, select { max-width: 100% !important; }
       <label class="login-lbl">Sync PIN (4+ characters)</label>
       <input class="login-inp" id="login-pin" type="password" placeholder="e.g. jake2025" maxlength="64" autocomplete="off" autocorrect="off" spellcheck="false" onkeydown="if(event.key==='Enter')doLogin()"/>
     </div>
-    <div class="login-field"><input class="login-inp url-inp" id="login-url" type="url" placeholder="" autocomplete="off" autocorrect="off" spellcheck="false" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+    <div class="login-field">
+      <label class="login-lbl">Server</label>
+      <input class="login-inp url-inp" id="login-url" type="url" placeholder="https://..." autocomplete="off" autocorrect="off" spellcheck="false" onkeydown="if(event.key==='Enter')doLogin()"/>
+    </div>
     <button class="login-btn" onclick="doLogin()">Sign In &amp; Sync</button>
     <div class="login-divider">or</div>
     <button class="login-btn" style="background:var(--elev);color:var(--tx);border:1px solid var(--brd2)" onclick="skipLogin()">Use Offline (no sync)</button>
@@ -1432,8 +1435,16 @@ async function doLogin() {
   const pin = g("login-pin").value.trim();
   const url = g("login-url").value.trim().replace(/\/$/,"");
   const statusEl = g("login-status");
-  if(!pin||pin.length<4){ statusEl.textContent="PIN must be at least 4 characters"; statusEl.style.color="var(--red)"; return; }
-  if(!url||!url.startsWith("http")){ statusEl.textContent="Enter a valid URL"; statusEl.style.color="var(--red)"; return; }
+  if(!pin||pin.length<4){ statusEl.textContent="PIN must be at least 4 characters"; statusEl.style.color="var(--red)"; statusEl.style.display="block"; return; }
+  if(!url||!url.startsWith("http")){ 
+    statusEl.textContent="Please enter your server URL in the field above"; 
+    statusEl.style.color="var(--red)";
+    statusEl.style.display="block";
+    // Also make URL field visible with a highlight if it was hidden
+    const urlField = g("login-url");
+    if(urlField) { urlField.style.borderColor="var(--red)"; urlField.focus(); }
+    return; 
+  }
   statusEl.textContent="Connecting..."; statusEl.style.color="var(--tx2)";
   try {
     const res = await fetch(`${url}/ping`);
@@ -1478,8 +1489,9 @@ async function doLogin() {
 function skipLogin() {
   g("login-screen").style.display="none";
   setSyncStatus("nosync","Offline mode");
+  renderAll();
   if(!S.settings.onboarded) {
-    showOnboarding();
+    setTimeout(showOnboarding, 100);
   } else {
     toast("Running offline — data stays on this device","info");
   }
