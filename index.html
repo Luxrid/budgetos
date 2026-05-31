@@ -1164,8 +1164,8 @@ async function syncPush() {
   }
 }
 
-async function syncPull() {
-  if(!SYNC.pin||!SYNC.url){ toast("Set up sync first","info"); return; }
+async function syncPull(silent=false) {
+  if(!SYNC.pin||!SYNC.url){ if(!silent) toast("Set up sync first","info"); return; }
   setSyncStatus("syncing");
   try {
     const res = await fetch(`${SYNC.url}/sync`, {
@@ -1177,16 +1177,30 @@ async function syncPull() {
     }
     const data = await res.json();
     if(!data.exists||!data.data) {
-      toast("No cloud data yet — push first","info");
+      if(!silent) toast("No cloud data yet — push first","info");
       setSyncStatus("synced","no data");
       return;
     }
-    // Decrypt
-    const decrypted = await decryptData(data.data, SYNC.pin);
-    if(!decrypted) {
-      // Wrong PIN or corrupted — don't overwrite local data
-      setSyncStatus("error","decryption failed");
-      toast("Decryption failed — wrong PIN?","err");
+    // Detect old unencrypted format (pre-encryption update)
+    // Old format: data.data has expenses/txs directly
+    // New format: data.data has { ciphertext, iv, savedAt }
+    let decrypted;
+    if(data.data && data.data.ciphertext) {
+      // New encrypted format
+      decrypted = await decryptData(data.data, SYNC.pin);
+      if(!decrypted) {
+        setSyncStatus("error","decryption failed");
+        toast("Decryption failed — wrong PIN?","err");
+        return;
+      }
+    } else if(data.data && (data.data.expenses || data.data.txs || data.data.settings)) {
+      // Old unencrypted format — migrate it
+      decrypted = data.data;
+      toast("Migrating old data to encrypted format — pushing now...","info");
+      setTimeout(syncPush, 1500); // re-push encrypted
+    } else {
+      if(!silent) toast("No cloud data yet — push first","info");
+      setSyncStatus("synced","no data");
       return;
     }
     ["expenses","txs","incomes","goals","recurring","debts","networth"].forEach(k=>{ if(decrypted[k]) S[k]=decrypted[k]; });
@@ -1199,14 +1213,47 @@ async function syncPull() {
     SYNC.lastSync = Date.now();
     saveSync();
     setSyncStatus("synced", new Date(SYNC.lastSync).toLocaleTimeString());
-    toast("Data pulled ✓","ok");
+    if(!silent) toast("Data pulled ✓","ok");
   } catch(e) {
     setSyncStatus("error", e.message||"failed");
     toast("Pull failed: "+e.message,"err");
   }
 }
 
-function autoSync() { if(SYNC.pin&&SYNC.url&&S.settings.autoSync) syncPush(); }
+// ── AUTO-SYNC ENGINE ────────────────────────────────────────────────────────
+let _syncTimer = null;
+
+function autoSync() {
+  if(!SYNC.pin || !SYNC.url || !S.settings.autoSync) return;
+  // Show yellow dot immediately so user knows change is pending
+  setSyncStatus("syncing");
+  // Debounce: collapse rapid changes (typing in budget field etc) into one push
+  clearTimeout(_syncTimer);
+  _syncTimer = setTimeout(() => syncPush(), 1500);
+}
+
+// ── Pull when switching back to this tab or window ───────────────────────────
+document.addEventListener('visibilitychange', () => {
+  if(document.visibilityState === 'visible' && SYNC.pin && SYNC.url) {
+    const stale = Date.now() - (SYNC.lastSync || 0) > 30000;
+    if(stale) syncPull(true).catch(() => {});
+  }
+});
+
+window.addEventListener('focus', () => {
+  if(SYNC.pin && SYNC.url) {
+    const stale = Date.now() - (SYNC.lastSync || 0) > 30000;
+    if(stale) syncPull(true).catch(() => {});
+  }
+});
+
+// ── Background poll: pull every 3 min while app is open ─────────────────────
+setInterval(() => {
+  if(document.visibilityState === 'visible' && SYNC.pin && SYNC.url && S.settings.autoSync) {
+    const stale = Date.now() - (SYNC.lastSync || 0) > 180000;
+    if(stale) syncPull(true).catch(() => {});
+  }
+}, 60000);
 
 function showSyncModal() {
   const lastSyncStr = SYNC.lastSync ? new Date(SYNC.lastSync).toLocaleString() : "Never";
@@ -1340,7 +1387,7 @@ async function unlockApp() {
 
 /* ═══ LOCAL STORAGE ══════════════════════════════════════════════════════════ */
 function load(){try{const d=JSON.parse(localStorage.getItem("bos_v7")||"null");if(d){["expenses","txs","incomes","goals","recurring","debts","networth"].forEach(k=>{if(d[k])S[k]=d[k];});if(d.settings)S.settings={...S.settings,...d.settings};if(d.settings?.fx)S.settings.fx={...S.settings.fx,...d.settings.fx};}}catch{}}
-function save(){try{localStorage.setItem("bos_v7",JSON.stringify(S));if(S.settings.autoSync&&SYNC.pin&&SYNC.url)setTimeout(autoSync,1000);}catch{}}
+function save(){try{localStorage.setItem("bos_v7",JSON.stringify(S));autoSync();}catch{}}
 
 /* ═══ HELPERS ════════════════════════════════════════════════════════════════ */
 const g=id=>document.getElementById(id);
@@ -1946,21 +1993,30 @@ updatePctBtn();
 startClock();
 renderAll();
 // Skip login if already configured or was previously skipped
-if(SYNC.pin&&SYNC.url){
-  g("login-screen").style.display="none";
-  updateUserBadge();
-  setSyncStatus("syncing");
-  syncPull().then(()=>{
+(async () => {
+  if(SYNC.pin&&SYNC.url){
+    g("login-screen").style.display="none";
+    updateUserBadge();
+    setSyncStatus("syncing");
+    // Backfill hash if missing (users who logged in before hashing was added)
+    if(!SYNC.hash && SYNC.pin) {
+      SYNC.hash = await hashPin(SYNC.pin);
+      saveSync();
+    }
+    if(!SYNC.salt) { SYNC.salt = newSalt(); saveSync(); }
+    try {
+      await syncPull();
+      if(!S.settings.onboarded) showOnboarding();
+    } catch(e) {
+      setSyncStatus("error","check connection");
+      if(!S.settings.onboarded) showOnboarding();
+    }
+  } else if(localStorage.getItem("bos_skip_login")==="1"){
+    g("login-screen").style.display="none";
+    setSyncStatus("nosync","Offline mode");
     if(!S.settings.onboarded) showOnboarding();
-  }).catch(()=>{
-    setSyncStatus("error","check connection");
-    if(!S.settings.onboarded) showOnboarding();
-  });
-}else if(localStorage.getItem("bos_skip_login")==="1"){
-  g("login-screen").style.display="none";
-  setSyncStatus("nosync","Offline mode");
-  if(!S.settings.onboarded) showOnboarding();
-}
+  }
+})();
 // Override skipLogin to remember the choice
 const _skipLogin=skipLogin;
 window.skipLogin=function(){localStorage.setItem("bos_skip_login","1");_skipLogin();};
