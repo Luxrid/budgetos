@@ -612,6 +612,58 @@ input, select { max-width: 100% !important; }
 }
 
 @media(max-width:768px){.mob-hide{display:none!important;}}
+
+/* ── ONBOARDING ─────────────────────────────────────────────────────────── */
+#onboarding{
+  position:fixed;inset:0;z-index:7500;
+  background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  padding:24px;
+  padding-top:max(24px, env(safe-area-inset-top));
+  padding-bottom:max(24px, env(safe-area-inset-bottom));
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+}
+.ob-card{
+  background:var(--surf);border:1px solid var(--brd2);
+  border-radius:24px;padding:32px 28px;
+  max-width:420px;width:100%;
+  box-shadow:0 24px 80px #000c;
+  position:relative;
+}
+.ob-step-dots{display:flex;gap:6px;justify-content:center;margin-bottom:24px;}
+.ob-dot{width:7px;height:7px;border-radius:50%;background:var(--brd2);transition:all .3s;}
+.ob-dot.on{background:var(--acc);width:20px;border-radius:4px;}
+.ob-icon{font-size:42px;text-align:center;display:block;margin-bottom:12px;}
+.ob-title{font-family:var(--fd);font-size:22px;font-weight:800;text-align:center;margin-bottom:6px;letter-spacing:-.02em;}
+.ob-sub{font-size:12px;color:var(--tx2);text-align:center;margin-bottom:24px;line-height:1.7;}
+.ob-field{margin-bottom:14px;}
+.ob-lbl{font-size:9px;color:var(--tx2);letter-spacing:.1em;text-transform:uppercase;font-weight:700;display:block;margin-bottom:6px;}
+.ob-inp{width:100%;background:var(--elev);border:1px solid var(--brd);color:var(--tx);padding:12px 14px;border-radius:var(--rs);font-size:16px;outline:none;transition:all .2s;font-family:var(--fm);}
+.ob-inp:focus{border-color:var(--acc);box-shadow:0 0 0 3px var(--adim);}
+.ob-inp::placeholder{color:var(--tx3);}
+.ob-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.ob-btn{width:100%;background:var(--acc);color:var(--bg);border:none;padding:14px;border-radius:var(--rs);font-size:14px;font-weight:700;cursor:pointer;margin-top:8px;font-family:var(--fm);transition:all .2s;letter-spacing:.03em;}
+.ob-btn:hover{opacity:.9;box-shadow:0 4px 20px var(--aglow);}
+.ob-btn:active{transform:scale(.98);}
+.ob-skip{display:block;text-align:center;font-size:11px;color:var(--tx3);margin-top:12px;cursor:pointer;transition:color .2s;}
+.ob-skip:hover{color:var(--tx2);}
+.ob-back{background:none;border:none;color:var(--tx3);font-size:11px;cursor:pointer;font-family:var(--fm);padding:0;margin-bottom:16px;display:flex;align-items:center;gap:4px;transition:color .2s;}
+.ob-back:hover{color:var(--tx2);}
+.ob-cat-list{display:flex;flex-direction:column;gap:6px;margin-bottom:8px;max-height:220px;overflow-y:auto;}
+.ob-cat-item{display:flex;align-items:center;gap:10px;background:var(--elev);border:1px solid var(--brd);border-radius:var(--rs);padding:10px 14px;cursor:pointer;transition:all .15s;user-select:none;}
+.ob-cat-item.selected{border-color:var(--aglow);background:var(--adim);}
+.ob-cat-item:active{transform:scale(.98);}
+.ob-cat-check{width:18px;height:18px;border-radius:5px;border:2px solid var(--brd2);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;transition:all .2s;}
+.ob-cat-item.selected .ob-cat-check{background:var(--acc);border-color:var(--acc);color:var(--bg);}
+.ob-cat-icon{font-size:18px;flex-shrink:0;}
+.ob-cat-name{flex:1;font-size:13px;font-weight:500;}
+.ob-feature-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;}
+.ob-feature{background:var(--elev);border:1px solid var(--brd);border-radius:var(--rs);padding:12px;text-align:center;}
+.ob-feature-icon{font-size:20px;display:block;margin-bottom:4px;}
+.ob-feature-lbl{font-size:10px;color:var(--tx2);line-height:1.4;}
+.ob-progress{height:3px;background:var(--brd);border-radius:2px;margin-bottom:20px;overflow:hidden;}
+.ob-progress-fill{height:100%;background:var(--acc);border-radius:2px;transition:width .4s var(--ease);}
 </style>
 </head>
 <body data-theme="obsidian" class="anim grain glowbg glowbars">
@@ -638,6 +690,14 @@ input, select { max-width: 100% !important; }
   </div>
 </div>
 
+
+<!-- ONBOARDING -->
+<div id="onboarding" style="display:none">
+  <div class="ob-card" id="ob-card">
+    <!-- steps injected by JS -->
+  </div>
+</div>
+
 <!-- SYNC STATUS BAR -->
 <div id="sync-bar">
   <div class="sync-info">
@@ -654,7 +714,7 @@ input, select { max-width: 100% !important; }
 <div class="app" id="app">
 <!-- TOP NAV -->
 <nav class="topnav">
-  <div class="logo"><div class="logo-mark">B</div><div><div class="logo-text">Budget OS</div><div class="logo-sub" id="top-loc">AUSTIN, TX</div></div></div>
+  <div class="logo"><div class="logo-mark">B</div><div><div class="logo-text">Budget OS</div><div class="logo-sub" id="top-loc"></div></div></div>
   <div class="topnav-center">
     <div class="search-box">
       <span class="search-ico">🔍</span>
@@ -793,7 +853,7 @@ input, select { max-width: 100% !important; }
 <div id="p-paycheck" class="page">
   <div class="ph"><div class="ph-eyebrow">Planning</div><div class="ph-title">Paycheck Planner</div><div class="ph-sub">Real-time per-check breakdowns with OT impact</div></div>
   <div class="fg fg4">
-    <div class="field"><label class="flbl">Hourly Rate ($)</label><input class="finp" type="number" id="pay-rate" value="16.50" step="0.25" oninput="renderPaycheck()" inputmode="decimal"/></div>
+    <div class="field"><label class="flbl">Hourly Rate ($)</label><input class="finp" type="number" id="pay-rate" value="" step="0.25" oninput="renderPaycheck()" inputmode="decimal"/></div>
     <div class="field"><label class="flbl">Hours / Week</label><input class="finp" type="number" id="pay-hrs" value="40" step="1" oninput="renderPaycheck()" inputmode="numeric"/></div>
     <div class="field"><label class="flbl">OT Hours / Week</label><input class="finp" type="number" id="pay-ot" value="0" step="1" oninput="renderPaycheck()" inputmode="numeric"/></div>
     <div class="field"><label class="flbl">Frequency</label><select class="finp" id="pay-freq" onchange="renderPaycheck()"><option value="weekly">Weekly</option><option value="biweekly" selected>Bi-weekly</option><option value="semimonthly">Semi-monthly</option><option value="monthly">Monthly</option></select></div>
@@ -907,7 +967,7 @@ input, select { max-width: 100% !important; }
     <div class="sr"><div class="sr-info"><div class="sr-lbl">Theme</div><div class="sr-desc">9 color themes</div></div><select class="set-sel" id="s-theme" onchange="setTheme(this.value)"></select></div>
     <div class="sr"><div class="sr-info"><div class="sr-lbl">Show bar percentages</div></div><div class="toggle on" id="tog-pct" onclick="togSet('showPct',this)"></div></div>
     <div class="sr"><div class="sr-info"><div class="sr-lbl">Compact rows</div></div><div class="toggle" id="tog-compact" onclick="togSet('compact',this)"></div></div>
-    <div class="sr"><div class="sr-info"><div class="sr-lbl">Location label</div></div><input class="set-inp" id="s-loc" value="AUSTIN, TX" onchange="saveSetting('location',this.value);document.getElementById('top-loc').textContent=this.value"/></div>
+    <div class="sr"><div class="sr-info"><div class="sr-lbl">Location label</div></div><input class="set-inp" id="s-loc" value="" onchange="saveSetting('location',this.value);document.getElementById('top-loc').textContent=this.value"/></div>
     <div class="sr"><div class="sr-info"><div class="sr-lbl">Currency symbol</div></div><input class="set-inp" id="s-curr" value="$" style="width:52px" onchange="saveSetting('currency',this.value);renderAll()"/></div>
   </div>
   <div class="slbl">Animations &amp; Effects</div>
@@ -922,10 +982,10 @@ input, select { max-width: 100% !important; }
   </div>
   <div class="slbl">Income &amp; Tax</div>
   <div class="sg"><div class="sg-head">Your Info</div>
-    <div class="sr"><div class="sr-info"><div class="sr-lbl">Hourly wage ($)</div></div><input class="set-inp" type="number" id="s-wage" value="16.50" step="0.25" onchange="saveSetting('wage',parseFloat(this.value));renderAll()"/></div>
+    <div class="sr"><div class="sr-info"><div class="sr-lbl">Hourly wage ($)</div></div><input class="set-inp" type="number" id="s-wage" value="" step="0.25" onchange="saveSetting('wage',parseFloat(this.value));renderAll()"/></div>
     <div class="sr"><div class="sr-info"><div class="sr-lbl">Hours per week</div></div><input class="set-inp" type="number" id="s-hrs" value="40" step="1" onchange="saveSetting('hrs',parseFloat(this.value));renderAll()"/></div>
     <div class="sr"><div class="sr-info"><div class="sr-lbl">Effective tax rate (%)</div><div class="sr-desc">Auto-synced from Income Targets</div></div><input class="set-inp" type="number" id="s-tax" value="19" step="0.5" onchange="saveSetting('tax',parseFloat(this.value));renderAll()"/></div>
-    <div class="sr"><div class="sr-info"><div class="sr-lbl">Cash on hand ($)</div></div><input class="set-inp" type="number" id="s-cash" value="5000" step="100" onchange="saveSetting('cash',parseFloat(this.value));renderAll()"/></div>
+    <div class="sr"><div class="sr-info"><div class="sr-lbl">Cash on hand ($)</div></div><input class="set-inp" type="number" id="s-cash" value="" step="100" onchange="saveSetting('cash',parseFloat(this.value));renderAll()"/></div>
     <div class="sr"><div class="sr-info"><div class="sr-lbl">Monthly savings target ($)</div></div><input class="set-inp" type="number" id="s-savtgt" value="300" step="50" onchange="saveSetting('savTarget',parseFloat(this.value));renderAll()"/></div>
     <div class="sr"><div class="sr-info"><div class="sr-lbl">Daily spending limit ($)</div></div><input class="set-inp" type="number" id="s-daily" value="60" step="5" onchange="saveSetting('dailyLimit',parseFloat(this.value));renderAll()"/></div>
   </div>
@@ -985,12 +1045,12 @@ function thCalc(wage,hrs,s,c,f){const g=wage*hrs*52;return Math.round((g-totalTa
 const THEMES=[{id:"obsidian",l:"Obsidian",c:"linear-gradient(135deg,#7c6eff,#050507)"},{id:"aurora",l:"Aurora",c:"linear-gradient(135deg,#00d4ff,#020b14)"},{id:"ember",l:"Ember",c:"linear-gradient(135deg,#ff6b2b,#0a0704)"},{id:"arctic",l:"Arctic",c:"linear-gradient(135deg,#3b82f6,#f0f4f8)"},{id:"midnight",l:"Midnight",c:"linear-gradient(135deg,#fff,#000)"},{id:"forest",l:"Forest",c:"linear-gradient(135deg,#4ade80,#060d07)"},{id:"rose",l:"Rose",c:"linear-gradient(135deg,#fb7185,#0f0509)"},{id:"neon",l:"Neon",c:"linear-gradient(135deg,#c026d3,#02000a)"},{id:"slate",l:"Slate",c:"linear-gradient(135deg,#38bdf8,#0c1117)"}];
 const FM={weekly:52,biweekly:26,semimonthly:24,monthly:12};
 const FL={weekly:"week",biweekly:"2 weeks",semimonthly:"semi-month",monthly:"month"};
-const DEXP=[{name:"Rent",budget:812,color:"#ff6b4a"},{name:"Apt. Fees",budget:126,color:"#ff4a4a",note:"trash·pest·COA·water·amenity"},{name:"Electric",budget:130,color:"#ffb347"},{name:"Natural Gas",budget:35,color:"#b847ff"},{name:"Groceries",budget:350,color:"#47ff8a"},{name:"Transportation",budget:200,color:"#ff47a3"},{name:"Subscriptions",budget:50,color:"#ffe147"},{name:"Household",budget:50,color:"#47ffe1"},{name:"Personal",budget:100,color:"#a3ff47"}];
-const DGOALS=[{id:"emergency",label:"Emergency Fund",target:1000,color:"#ff6b4a",icon:"🛡️",saved:0},{id:"car",label:"Car / License",target:3000,color:"#60a5fa",icon:"🚗",saved:0},{id:"general",label:"General Savings",target:2000,color:"#4ade80",icon:"💰",saved:0}];
-const DREC=[{id:"r1",name:"Rent",amount:812,due:1,cat:"Rent",color:"#ff6b4a"},{id:"r2",name:"Apt. Fees",amount:126,due:1,cat:"Apt. Fees",color:"#ff4a4a"},{id:"r3",name:"Electric",amount:130,due:15,cat:"Electric",color:"#ffb347"}];
+const DEXP=[];
+const DGOALS=[];
+const DREC=[];
 
 /* ═══ STATE ══════════════════════════════════════════════════════════════════ */
-let S={expenses:DEXP.map(e=>({...e})),txs:[],incomes:[],goals:DGOALS.map(g=>({...g})),recurring:DREC.map(r=>({...r})),debts:[],networth:{assets:[{id:"a1",name:"Cash on Hand",value:5000}],liabilities:[]},settings:{theme:"obsidian",showPct:true,compact:false,overWarn:true,cautionAt80:true,confetti:true,rollover:false,pctMode:false,billReminders:true,autoSync:true,wage:16.5,hrs:40,tax:19,cash:5000,savTarget:300,dailyLimit:60,currency:"$",location:"AUSTIN, TX",taxState:"TX",taxCity:"Austin",taxFiling:"single",fx:{anim:true,glowbg:true,glowbars:true,grain:true,ripple:true,particles:false}}};
+let S={expenses:DEXP.map(e=>({...e})),txs:[],incomes:[],goals:DGOALS.map(g=>({...g})),recurring:DREC.map(r=>({...r})),debts:[],networth:{assets:[{id:"a1",name:"Cash on Hand",value:0}],liabilities:[]},settings:{theme:"obsidian",showPct:true,compact:false,overWarn:true,cautionAt80:true,confetti:true,rollover:false,pctMode:false,billReminders:true,autoSync:true,wage:0,hrs:40,tax:19,cash:0,savTarget:300,dailyLimit:60,currency:"$",location:"",taxState:"TX",taxCity:"",taxFiling:"single",fx:{anim:true,glowbg:true,glowbars:true,grain:true,ripple:true,particles:false}}};
 
 /* ═══ CRYPTO HELPERS ════════════════════════════════════════════════════════ */
 // All crypto uses WebCrypto API (built into every modern browser + Safari iOS 13+)
@@ -1347,9 +1407,19 @@ async function doLogin() {
       resetSessionTimer();
       try {
         await syncPull();
-        toast("Welcome back! Data loaded ✓","ok");
+        // After pull, check if this is a new account
+        if(!S.settings.onboarded) {
+          showOnboarding();
+        } else {
+          toast("Welcome back! Data loaded ✓","ok");
+        }
       } catch {
-        toast("Signed in — no cloud data yet. Push when ready.","info");
+        // No cloud data yet — new user
+        if(!S.settings.onboarded) {
+          showOnboarding();
+        } else {
+          toast("Signed in — no cloud data yet. Push when ready.","info");
+        }
       }
     }, 600);
   } catch(e) {
@@ -1361,7 +1431,11 @@ async function doLogin() {
 function skipLogin() {
   g("login-screen").style.display="none";
   setSyncStatus("nosync","Offline mode");
-  toast("Running offline — data stays on this device","info");
+  if(!S.settings.onboarded) {
+    showOnboarding();
+  } else {
+    toast("Running offline — data stays on this device","info");
+  }
 }
 
 
@@ -1532,7 +1606,7 @@ function exportData(){const b=new Blob([JSON.stringify(S,null,2)],{type:"applica
 function triggerImport(){g("import-file").click();}
 function doImport(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=ev=>{try{const d=JSON.parse(ev.target.result);["expenses","txs","incomes","goals","recurring","debts","networth"].forEach(k=>{if(d[k])S[k]=d[k];});if(d.settings)S.settings={...S.settings,...d.settings};save();document.body.setAttribute("data-theme",S.settings.theme);buildThemePicker();applyFX();renderAll();nav("dashboard");toast("Import successful ✓");}catch{toast("Import failed","err");}};r.readAsText(file);e.target.value="";}
 function exportCSV(){if(!S.txs.length){toast("No transactions","info");return;}const hdr="Name,Amount,Category,Date,Payment,Notes\n",rows=S.txs.map(t=>`"${t.name}",${t.amt},"${t.cat}","${t.date}","${t.pay||""}","${t.note||""}"`).join("\n");const b=new Blob([hdr+rows],{type:"text/csv"});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=`transactions-${tod()}.csv`;a.click();toast("CSV exported ✓");}
-function confirmReset(){if(confirm("Reset ALL data?")){S.txs=[];S.incomes=[];S.goals=DGOALS.map(g2=>({...g2,saved:0}));S.expenses=DEXP.map(e=>({...e}));S.debts=[];S.networth={assets:[{id:"a1",name:"Cash on Hand",value:5000}],liabilities:[]};S.recurring=DREC.map(r=>({...r}));save();renderAll();nav("dashboard");toast("Data reset","info");}}
+function confirmReset(){if(confirm("Reset ALL data?")){S.txs=[];S.incomes=[];S.goals=DGOALS.map(g2=>({...g2,saved:0}));S.expenses=DEXP.map(e=>({...e}));S.debts=[];S.networth={assets:[{id:"a1",name:"Cash on Hand",value:0}],liabilities:[]};S.recurring=DREC.map(r=>({...r}));save();renderAll();nav("dashboard");toast("Data reset","info");}}
 
 /* ═══ PWA ════════════════════════════════════════════════════════════════════ */
 let deferredPrompt=null;
@@ -1540,6 +1614,320 @@ window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredPro
 function doInstall(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(r=>{if(r.outcome==="accepted")toast("Installing...","info");deferredPrompt=null;});}else toast("Open in browser to install, or use iOS Safari Share → Add to Home Screen","info");}
 function showInstallModal(){openModal(`<div class="modal-title">📲 Install Budget OS</div><div style="background:var(--elev);border-radius:var(--rs);padding:14px;margin-bottom:10px"><div style="font-size:13px;font-weight:600;margin-bottom:8px">📱 iPhone / iPad (Safari only)</div><div style="font-size:12px;color:var(--tx2);line-height:1.7">1. Open this URL in <b>Safari</b><br>2. Tap <b>Share ⬆️</b> at the bottom<br>3. Tap <b>"Add to Home Screen"</b><br>4. Tap <b>"Add"</b> — done!</div></div><div style="background:var(--elev);border-radius:var(--rs);padding:14px"><div style="font-size:13px;font-weight:600;margin-bottom:8px">🖥️ Chrome / Edge / Android</div><div style="font-size:12px;color:var(--tx2);line-height:1.7">Look for the <b>install icon ⊕</b> in the address bar, or browser menu → <b>"Install Budget OS"</b></div></div><div class="modal-actions"><button class="btn" onclick="closeModal()">Got it</button></div>`);}
 if("serviceWorker"in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));}
+
+
+/* ═══ ONBOARDING ════════════════════════════════════════════════════════════ */
+const OB_STEPS = 5;
+let obStep = 0;
+let obData = {
+  name: '',
+  wage: '',
+  hrs: 40,
+  state: 'TX',
+  city: '',
+  filing: 'single',
+  cats: [],
+  dailyLimit: 60,
+};
+
+// Common budget categories to pick from
+const OB_CATS = [
+  {name:'Rent / Mortgage', icon:'🏠', color:'#ff6b4a', budget:0},
+  {name:'Utilities', icon:'💡', color:'#ffb347', budget:0},
+  {name:'Groceries', icon:'🛒', color:'#47ff8a', budget:0},
+  {name:'Transportation', icon:'🚌', color:'#ff47a3', budget:0},
+  {name:'Phone', icon:'📱', color:'#60a5fa', budget:0},
+  {name:'Internet', icon:'📶', color:'#38bdf8', budget:0},
+  {name:'Subscriptions', icon:'📺', color:'#ffe147', budget:0},
+  {name:'Dining Out', icon:'🍔', color:'#fb923c', budget:0},
+  {name:'Healthcare', icon:'⚕️', color:'#f472b6', budget:0},
+  {name:'Personal Care', icon:'🪥', color:'#a78bfa', budget:0},
+  {name:'Clothing', icon:'👕', color:'#34d399', budget:0},
+  {name:'Entertainment', icon:'🎮', color:'#c026d3', budget:0},
+  {name:'Savings', icon:'🏦', color:'#4ade80', budget:0},
+  {name:'Household', icon:'🧹', color:'#47ffe1', budget:0},
+  {name:'Pets', icon:'🐾', color:'#f87171', budget:0},
+  {name:'Gym / Fitness', icon:'🏋️', color:'#fbbf24', budget:0},
+];
+
+function showOnboarding() {
+  document.getElementById('onboarding').style.display = 'flex';
+  obStep = 0;
+  renderObStep();
+}
+
+function hideOnboarding() {
+  document.getElementById('onboarding').style.display = 'none';
+}
+
+function obNext() { obStep++; renderObStep(); }
+function obBack() { obStep = Math.max(0, obStep-1); renderObStep(); }
+
+function renderObStep() {
+  const card = document.getElementById('ob-card');
+  const pct = Math.round(((obStep+1)/OB_STEPS)*100);
+
+  const dots = Array.from({length:OB_STEPS}, (_,i) =>
+    `<div class="ob-dot${i===obStep?' on':''}"></div>`
+  ).join('');
+
+  const progress = `<div class="ob-progress"><div class="ob-progress-fill" style="width:${pct}%"></div></div>`;
+  const backBtn = obStep > 0 ? `<button class="ob-back" onclick="obBack()">← Back</button>` : '';
+
+  let content = '';
+
+  // ── STEP 0: Welcome ──────────────────────────────────────────────────────
+  if (obStep === 0) {
+    content = `
+      <span class="ob-icon">👋</span>
+      <div class="ob-title">Welcome to Budget OS</div>
+      <div class="ob-sub">A quick setup to make this yours.<br>Takes about 2 minutes.</div>
+      <div class="ob-feature-grid">
+        <div class="ob-feature"><span class="ob-feature-icon">📊</span><div class="ob-feature-lbl">Track every dollar you spend</div></div>
+        <div class="ob-feature"><span class="ob-feature-icon">💰</span><div class="ob-feature-lbl">Set budgets by category</div></div>
+        <div class="ob-feature"><span class="ob-feature-icon">🎯</span><div class="ob-feature-lbl">Save toward any goal</div></div>
+        <div class="ob-feature"><span class="ob-feature-icon">☁️</span><div class="ob-feature-lbl">Syncs across all your devices</div></div>
+        <div class="ob-feature"><span class="ob-feature-icon">📉</span><div class="ob-feature-lbl">See trends and patterns</div></div>
+        <div class="ob-feature"><span class="ob-feature-icon">🔐</span><div class="ob-feature-lbl">Your data is encrypted, always</div></div>
+      </div>
+      <button class="ob-btn" onclick="obNext()">Let's get started →</button>
+      <span class="ob-skip" onclick="obSkipAll()">Skip setup — I'll do it manually</span>
+    `;
+  }
+
+  // ── STEP 1: Name + Location ──────────────────────────────────────────────
+  else if (obStep === 1) {
+    const states = Object.entries(ST_TAX).sort((a,b)=>a[1].n.localeCompare(b[1].n))
+      .map(([k,v]) => `<option value="${k}"${k===obData.state?' selected':''}>${v.n} (${k})</option>`).join('');
+    content = `
+      ${backBtn}
+      <span class="ob-icon">📍</span>
+      <div class="ob-title">About You</div>
+      <div class="ob-sub">Used for accurate tax calculations and personalizing the app.</div>
+      <div class="ob-field">
+        <label class="ob-lbl">Your first name (optional)</label>
+        <input class="ob-inp" id="ob-name" placeholder="e.g. Jake" value="${obData.name}" oninput="obData.name=this.value"/>
+      </div>
+      <div class="ob-field">
+        <label class="ob-lbl">State</label>
+        <select class="ob-inp" id="ob-state" onchange="obData.state=this.value">
+          ${states}
+        </select>
+      </div>
+      <button class="ob-btn" onclick="obSave1()">Continue →</button>
+    `;
+  }
+
+  // ── STEP 2: Income ───────────────────────────────────────────────────────
+  else if (obStep === 2) {
+    content = `
+      ${backBtn}
+      <span class="ob-icon">💵</span>
+      <div class="ob-title">Your Income</div>
+      <div class="ob-sub">Used to calculate take-home pay and show how much you have to work with each month.</div>
+      <div class="ob-row">
+        <div class="ob-field">
+          <label class="ob-lbl">Hourly wage ($)</label>
+          <input class="ob-inp" id="ob-wage" type="number" placeholder="e.g. 18.00" inputmode="decimal" value="${obData.wage||''}" oninput="obData.wage=this.value"/>
+        </div>
+        <div class="ob-field">
+          <label class="ob-lbl">Hours / week</label>
+          <input class="ob-inp" id="ob-hrs" type="number" placeholder="40" inputmode="numeric" value="${obData.hrs}" oninput="obData.hrs=parseInt(this.value)||40"/>
+        </div>
+      </div>
+      <div class="ob-field">
+        <label class="ob-lbl">Filing status</label>
+        <select class="ob-inp" onchange="obData.filing=this.value">
+          <option value="single"${obData.filing==='single'?' selected':''}>Single</option>
+          <option value="mfj"${obData.filing==='mfj'?' selected':''}>Married Filing Jointly</option>
+          <option value="hoh"${obData.filing==='hoh'?' selected':''}>Head of Household</option>
+        </select>
+      </div>
+      <div id="ob-income-preview" style="background:var(--adim);border:1px solid var(--aglow);border-radius:var(--rs);padding:12px 14px;font-size:12px;margin-bottom:8px;display:none">
+        <div style="color:var(--tx2);margin-bottom:4px">Estimated monthly take-home</div>
+        <div id="ob-takehome-val" style="font-family:var(--fd);font-size:20px;font-weight:700;color:var(--acc)"></div>
+        <div id="ob-tax-breakdown" style="font-size:10px;color:var(--tx3);margin-top:4px"></div>
+      </div>
+      <button class="ob-btn" onclick="obSave2()">Continue →</button>
+      <span class="ob-skip" onclick="obNext()">Skip — I'll set this later</span>
+    `;
+    // Show preview on next tick after DOM renders
+    setTimeout(obUpdateIncomePreview, 50);
+  }
+
+  // ── STEP 3: Pick Categories ──────────────────────────────────────────────
+  else if (obStep === 3) {
+    const catItems = OB_CATS.map((c,i) => {
+      const sel = obData.cats.includes(i);
+      return `<div class="ob-cat-item${sel?' selected':''}" onclick="obToggleCat(${i})">
+        <div class="ob-cat-check">${sel?'✓':''}</div>
+        <span class="ob-cat-icon">${c.icon}</span>
+        <span class="ob-cat-name">${c.name}</span>
+      </div>`;
+    }).join('');
+    content = `
+      ${backBtn}
+      <span class="ob-icon">📋</span>
+      <div class="ob-title">Your Budget Categories</div>
+      <div class="ob-sub">Pick what applies to you. You can add, remove, and edit amounts any time.</div>
+      <div class="ob-cat-list" id="ob-cat-list">${catItems}</div>
+      <div style="font-size:10px;color:var(--tx3);text-align:center;margin-bottom:8px" id="ob-cat-count">${obData.cats.length} selected</div>
+      <button class="ob-btn" onclick="obSave3()">Continue →</button>
+      <span class="ob-skip" onclick="obNext()">Skip — start with no categories</span>
+    `;
+  }
+
+  // ── STEP 4: Tour ─────────────────────────────────────────────────────────
+  else if (obStep === 4) {
+    content = `
+      ${backBtn}
+      <span class="ob-icon">🗺️</span>
+      <div class="ob-title">Here's how it works</div>
+      <div class="ob-sub" style="text-align:left;margin-bottom:16px">A quick tour of the app.</div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
+        ${[
+          ['📊','Dashboard','Your financial snapshot — spending vs budget, today's limit, recent transactions.'],
+          ['💰','Budget','Set your monthly budget per category. Tap any amount to edit it.'],
+          ['🧾','Spending','Log every purchase here. Tap ✏️ on any item to edit it later.'],
+          ['🏦','Savings','Set goals like Emergency Fund or Car. Track deposits and milestones.'],
+          ['☰','Menu tab','On mobile, tap Menu to reach all 17 pages — paycheck planner, debt tracker, reports, and more.'],
+          ['☁️','Sync bar','The green dot means your data is synced. Tap Push ↑ to upload, Pull ↓ to download.'],
+          ['⚙️','Settings','Change your theme, wage, tax rate, daily limit, and more.'],
+        ].map(([ic,title,desc]) => `
+          <div style="display:flex;align-items:flex-start;gap:10px">
+            <span style="font-size:20px;flex-shrink:0;margin-top:1px">${ic}</span>
+            <div>
+              <div style="font-size:13px;font-weight:600;font-family:var(--fd)">${title}</div>
+              <div style="font-size:11px;color:var(--tx2);margin-top:2px;line-height:1.5">${desc}</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+      <button class="ob-btn" onclick="obFinish()">Start using Budget OS 🚀</button>
+    `;
+  }
+
+  card.innerHTML = `
+    <div class="ob-step-dots">${dots}</div>
+    ${progress}
+    ${content}
+  `;
+}
+
+function obUpdateIncomePreview() {
+  const wage = parseFloat(document.getElementById('ob-wage')?.value) || 0;
+  const hrs = parseInt(document.getElementById('ob-hrs')?.value) || 40;
+  const prev = document.getElementById('ob-income-preview');
+  const val = document.getElementById('ob-takehome-val');
+  const breakdown = document.getElementById('ob-tax-breakdown');
+  if (!prev || !wage) { if(prev) prev.style.display='none'; return; }
+  const gross = wage * hrs * 52;
+  const taxes = totalTax(gross, obData.state, obData.city, obData.filing);
+  const take = Math.round((gross - taxes.total) / 12);
+  const er = Math.round(effRate(gross, obData.state, obData.city, obData.filing) * 10) / 10;
+  prev.style.display = 'block';
+  val.textContent = '$' + take.toLocaleString() + '/mo';
+  breakdown.textContent = `${er}% effective tax rate · $${Math.round(taxes.total).toLocaleString()}/yr in taxes`;
+  // live update on input change
+  ['ob-wage','ob-hrs'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.oninput = () => { obData[id==='ob-wage'?'wage':'hrs'] = el.value; obUpdateIncomePreview(); };
+  });
+}
+
+function obToggleCat(i) {
+  const idx = obData.cats.indexOf(i);
+  if (idx === -1) obData.cats.push(i);
+  else obData.cats.splice(idx, 1);
+  // Re-render just the list and count
+  const list = document.getElementById('ob-cat-list');
+  const count = document.getElementById('ob-cat-count');
+  if (list) {
+    list.innerHTML = OB_CATS.map((c,ci) => {
+      const sel = obData.cats.includes(ci);
+      return `<div class="ob-cat-item${sel?' selected':''}" onclick="obToggleCat(${ci})">
+        <div class="ob-cat-check">${sel?'✓':''}</div>
+        <span class="ob-cat-icon">${c.icon}</span>
+        <span class="ob-cat-name">${c.name}</span>
+      </div>`;
+    }).join('');
+  }
+  if (count) count.textContent = obData.cats.length + ' selected';
+}
+
+function obSave1() {
+  obData.name = document.getElementById('ob-name')?.value.trim() || '';
+  obData.state = document.getElementById('ob-state')?.value || 'TX';
+  // Save state to settings immediately
+  S.settings.taxState = obData.state;
+  S.settings.location = obData.name ? obData.name + ''s Budget' : '';
+  const locEl = document.getElementById('top-loc');
+  if (locEl) locEl.textContent = S.settings.location;
+  obNext();
+}
+
+function obSave2() {
+  const wage = parseFloat(document.getElementById('ob-wage')?.value) || 0;
+  const hrs = parseInt(document.getElementById('ob-hrs')?.value) || 40;
+  obData.wage = wage;
+  obData.hrs = hrs;
+  if (wage > 0) {
+    S.settings.wage = wage;
+    S.settings.hrs = hrs;
+    S.settings.taxFiling = obData.filing;
+    // Calculate accurate tax rate
+    const gross = wage * hrs * 52;
+    S.settings.tax = Math.round(effRate(gross, obData.state, obData.city, obData.filing) * 10) / 10;
+    // Sync to paycheck planner inputs
+    const pwEl = document.getElementById('pay-rate');
+    if (pwEl) pwEl.value = wage;
+    const phEl = document.getElementById('pay-hrs');
+    if (phEl) phEl.value = hrs;
+    const ptEl = document.getElementById('pay-tax');
+    if (ptEl) ptEl.value = S.settings.tax;
+  }
+  obNext();
+}
+
+function obSave3() {
+  // Add selected categories to S.expenses
+  if (obData.cats.length > 0) {
+    S.expenses = obData.cats.map(i => ({
+      name: OB_CATS[i].name,
+      budget: 0,
+      color: OB_CATS[i].color,
+    }));
+    buildCatSels();
+  }
+  obNext();
+}
+
+function obFinish() {
+  // Mark onboarding as complete
+  S.settings.onboarded = true;
+  save();
+  hideOnboarding();
+  renderAll();
+  // Welcome toast with their name if set
+  const name = obData.name ? `, ${obData.name}` : '';
+  toast(`Welcome${name}! Budget OS is ready. 🎉`, 'ok');
+  // If they set up categories but no budgets yet, take them to budget page
+  if (S.expenses.length > 0) {
+    setTimeout(() => {
+      nav('budget');
+      toast('Set your budget amounts for each category 👆', 'info');
+    }, 1800);
+  }
+}
+
+function obSkipAll() {
+  S.settings.onboarded = true;
+  save();
+  hideOnboarding();
+  renderAll();
+  toast('Setup skipped — you can configure everything in Settings', 'info');
+}
+
 
 /* ═══ RENDER ALL ═════════════════════════════════════════════════════════════ */
 function renderAll(){updateSidebar();renderDashboard();}
@@ -1562,10 +1950,16 @@ if(SYNC.pin&&SYNC.url){
   g("login-screen").style.display="none";
   updateUserBadge();
   setSyncStatus("syncing");
-  syncPull().then(()=>{}).catch(()=>setSyncStatus("error","check connection"));
+  syncPull().then(()=>{
+    if(!S.settings.onboarded) showOnboarding();
+  }).catch(()=>{
+    setSyncStatus("error","check connection");
+    if(!S.settings.onboarded) showOnboarding();
+  });
 }else if(localStorage.getItem("bos_skip_login")==="1"){
   g("login-screen").style.display="none";
   setSyncStatus("nosync","Offline mode");
+  if(!S.settings.onboarded) showOnboarding();
 }
 // Override skipLogin to remember the choice
 const _skipLogin=skipLogin;
