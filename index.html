@@ -1035,6 +1035,18 @@ input, select { max-width: 100% !important; }
 </div><!-- .app -->
 <input type="file" id="import-file" accept=".json" style="display:none" onchange="doImport(event)"/>
 <script>
+window.addEventListener('error', function(e) {
+  if (document.getElementById('boot-err')) return;
+  var d = document.createElement('div');
+  d.id = 'boot-err';
+  d.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#7f1d1d;color:#fecaca;font:12px/1.5 monospace;padding:10px 14px;border-bottom:2px solid #ef4444;';
+  var msg = (e.message || 'Unknown error');
+  var loc = e.lineno ? (' (line ' + e.lineno + ')') : '';
+  d.textContent = '\u26a0 App error: ' + msg + loc + ' \u2014 try a hard refresh (Ctrl+Shift+R). If it persists, the deployed file is broken.';
+  document.body ? document.body.appendChild(d) : document.addEventListener('DOMContentLoaded', function(){ document.body.appendChild(d); });
+});
+</script>
+<script>
 /* ═══ TAX DATA ══════════════════════════════════════════════════════════════ */
 const ST_TAX={TX:{n:"Texas",s:0,note:"No state income tax"},FL:{n:"Florida",s:0,note:"No state income tax"},NV:{n:"Nevada",s:0,note:"No state income tax"},WA:{n:"Washington",s:0,note:"No state income tax"},WY:{n:"Wyoming",s:0,note:"No state income tax"},SD:{n:"South Dakota",s:0,note:"No state income tax"},TN:{n:"Tennessee",s:0,note:"No state income tax"},AK:{n:"Alaska",s:0,note:"No state income tax"},NH:{n:"New Hampshire",s:0,note:"No tax on wages"},AZ:{n:"Arizona",s:2.5},CO:{n:"Colorado",s:4.4},IL:{n:"Illinois",s:4.95},IN:{n:"Indiana",s:3.15},KY:{n:"Kentucky",s:4.0},MA:{n:"Massachusetts",s:5.0},MI:{n:"Michigan",s:4.05},NC:{n:"North Carolina",s:4.5},PA:{n:"Pennsylvania",s:3.07},UT:{n:"Utah",s:4.65},GA:{n:"Georgia",s:5.49},AL:{n:"Alabama",s:5.0},AR:{n:"Arkansas",s:4.4},ID:{n:"Idaho",s:5.8},IA:{n:"Iowa",s:5.7},KS:{n:"Kansas",s:5.7},LA:{n:"Louisiana",s:4.25},ME:{n:"Maine",s:7.15},MD:{n:"Maryland",s:5.75},MN:{n:"Minnesota",s:9.85},MS:{n:"Mississippi",s:4.7},MO:{n:"Missouri",s:4.95},MT:{n:"Montana",s:5.9},NE:{n:"Nebraska",s:5.84},NJ:{n:"New Jersey",s:6.37},NM:{n:"New Mexico",s:5.9},NY:{n:"New York",s:6.85},ND:{n:"North Dakota",s:2.5},OH:{n:"Ohio",s:3.99},OK:{n:"Oklahoma",s:4.75},OR:{n:"Oregon",s:8.75},RI:{n:"Rhode Island",s:5.99},SC:{n:"South Carolina",s:6.4},VT:{n:"Vermont",s:6.6},VA:{n:"Virginia",s:5.75},WV:{n:"West Virginia",s:6.5},WI:{n:"Wisconsin",s:5.3},HI:{n:"Hawaii",s:8.25},DE:{n:"Delaware",s:5.5},CT:{n:"Connecticut",s:5.0},CA:{n:"California",s:6.0}};
 const CT_TAX={"":{"n":"No city tax","e":0},"NYC":{"n":"New York City, NY","e":3.876},"Philadelphia":{"n":"Philadelphia, PA","e":3.75},"Detroit":{"n":"Detroit, MI","e":2.4},"Cleveland":{"n":"Cleveland, OH","e":2.5},"Columbus":{"n":"Columbus, OH","e":2.5},"Louisville":{"n":"Louisville, KY","e":2.2},"Denver":{"n":"Denver, CO","e":1.25},"Portland":{"n":"Portland, OR","e":2.0},"SanFrancisco":{"n":"San Francisco, CA","e":1.5},"Seattle":{"n":"Seattle, WA","e":0},"Austin":{"n":"Austin, TX","e":0},"Houston":{"n":"Houston, TX","e":0},"Dallas":{"n":"Dallas, TX","e":0},"Chicago":{"n":"Chicago, IL","e":0},"Miami":{"n":"Miami, FL","e":0},"Nashville":{"n":"Nashville, TN","e":0},"Atlanta":{"n":"Atlanta, GA","e":0},"Charlotte":{"n":"Charlotte, NC","e":0},"Phoenix":{"n":"Phoenix, AZ","e":0},"LasVegas":{"n":"Las Vegas, NV","e":0}};
@@ -1106,6 +1118,17 @@ function hexToBytes(hex)   { return new Uint8Array(hex.match(/.{2}/g).map(b=>par
 // Generate a random 16-byte salt hex (stored per-device, never sent to server)
 function newSalt() { return bytesToHex(crypto.getRandomValues(new Uint8Array(16))); }
 
+
+/* ── FETCH WITH TIMEOUT ─────────────────────────────────────────────────────
+   fetch() has no default timeout — a hung network leaves "Syncing..." forever.
+   12s is generous for a tiny JSON payload. */
+function fetchT(url, opts = {}, ms = 12000) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), ms);
+  return fetch(url, { ...opts, signal: ctrl.signal })
+    .finally(() => clearTimeout(t));
+}
+
 /* ═══ SYNC STATE ═════════════════════════════════════════════════════════════ */
 // SYNC.pin   — raw PIN (never sent to server)
 // SYNC.hash  — SHA-256(pin) hex — sent as X-Pin-Hash header
@@ -1147,7 +1170,7 @@ async function syncPush() {
   try {
     // Encrypt data client-side before sending
     const encrypted = await encryptData(S, SYNC.pin);
-    const res = await fetch(`${SYNC.url}/sync`, {
+    const res = await fetchT(`${SYNC.url}/sync`, {
       method: "POST",
       headers: { "Content-Type":"application/json", "X-Pin-Hash": SYNC.hash },
       body: JSON.stringify(encrypted)
@@ -1162,7 +1185,7 @@ async function syncPush() {
     setSyncStatus("synced", new Date(SYNC.lastSync).toLocaleTimeString());
     toast("Data pushed ✓","ok");
   } catch(e) {
-    setSyncStatus("error", e.message||"failed");
+    setSyncStatus("error", e.name==="AbortError" ? "timed out" : (e.message||"failed"));
     toast("Sync failed: "+e.message,"err");
   }
 }
@@ -1171,7 +1194,7 @@ async function syncPull(silent=false) {
   if(!SYNC.pin||!SYNC.url){ if(!silent) toast("Set up sync first","info"); return; }
   setSyncStatus("syncing");
   try {
-    const res = await fetch(`${SYNC.url}/sync`, {
+    const res = await fetchT(`${SYNC.url}/sync`, {
       headers: { "X-Pin-Hash": SYNC.hash }
     });
     if(!res.ok) {
@@ -1218,7 +1241,7 @@ async function syncPull(silent=false) {
     setSyncStatus("synced", new Date(SYNC.lastSync).toLocaleTimeString());
     if(!silent) toast("Data pulled ✓","ok");
   } catch(e) {
-    setSyncStatus("error", e.message||"failed");
+    setSyncStatus("error", e.name==="AbortError" ? "timed out" : (e.message||"failed"));
     toast("Pull failed: "+e.message,"err");
   }
 }
@@ -1293,7 +1316,7 @@ async function saveSyncSettings() {
   closeModal();
   setSyncStatus("syncing");
   try {
-    const res = await fetch(`${url}/ping`);
+    const res = await fetchT(`${url}/ping`, {}, 8000);
     if(!res.ok) throw new Error("Worker returned "+res.status);
     const data = await res.json();
     if(!data.ok) throw new Error("Worker unhealthy");
@@ -1390,7 +1413,11 @@ async function unlockApp() {
 
 /* ═══ LOCAL STORAGE ══════════════════════════════════════════════════════════ */
 function load(){try{const d=JSON.parse(localStorage.getItem("bos_v7")||"null");if(d){["expenses","txs","incomes","goals","recurring","debts","networth"].forEach(k=>{if(d[k])S[k]=d[k];});if(d.settings)S.settings={...S.settings,...d.settings};if(d.settings?.fx)S.settings.fx={...S.settings.fx,...d.settings.fx};}}catch{}}
-function save(){try{localStorage.setItem("bos_v7",JSON.stringify(S));autoSync();}catch{}}
+function save(){
+  try{ localStorage.setItem("bos_v7",JSON.stringify(S)); }
+  catch(e){ toast("Could not save locally — storage may be full","err"); }
+  try{ autoSync(); }catch{}
+}
 
 /* ═══ HELPERS ════════════════════════════════════════════════════════════════ */
 const g=id=>document.getElementById(id);
@@ -1432,6 +1459,8 @@ g("modal-bg").onclick=e=>{if(e.target.id==="modal-bg")closeModal();};
 
 /* ═══ LOGIN (secured) ═══════════════════════════════════════════════════════ */
 async function doLogin() {
+  const btn = document.querySelector('#login-screen .login-btn');
+  if (btn && btn.disabled) return; // already connecting
   const pin = g("login-pin").value.trim();
   const url = g("login-url").value.trim().replace(/\/$/,"");
   const statusEl = g("login-status");
@@ -1446,8 +1475,10 @@ async function doLogin() {
     return; 
   }
   statusEl.textContent="Connecting..."; statusEl.style.color="var(--tx2)";
+  if (btn) { btn.disabled = true; btn.style.opacity = ".6"; btn.textContent = "Connecting..."; }
+  const resetBtn = () => { if (btn) { btn.disabled = false; btn.style.opacity = ""; btn.innerHTML = "Sign In &amp; Sync"; } };
   try {
-    const res = await fetch(`${url}/ping`);
+    const res = await fetchT(`${url}/ping`, {}, 8000);
     if(!res.ok) throw new Error("Worker returned "+res.status);
     const d = await res.json();
     if(!d.ok) throw new Error("Worker unhealthy");
@@ -1481,7 +1512,8 @@ async function doLogin() {
       }
     }, 600);
   } catch(e) {
-    statusEl.textContent = "Could not connect: "+e.message;
+    resetBtn();
+    statusEl.textContent = "Could not connect: " + (e.name==="AbortError" ? "timed out — check the URL" : e.message);
     statusEl.style.color = "var(--red)";
   }
 }

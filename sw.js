@@ -1,4 +1,4 @@
-const CACHE = 'budgetos-v2';
+const CACHE = 'budgetos-v3';
 const ASSETS = [
   './index.html',
   './manifest.json',
@@ -22,16 +22,42 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  // Network-first for sync API calls, cache-first for app shell
-  if (e.request.url.includes('workers.dev')) {
-    e.respondWith(fetch(e.request).catch(() => new Response('{"error":"offline"}', {headers:{'Content-Type':'application/json'}})));
+  const url = e.request.url;
+
+  // Never cache sync API calls — always hit the network
+  if (url.includes('workers.dev')) {
+    e.respondWith(
+      fetch(e.request).catch(() =>
+        new Response('{"error":"offline"}', { headers: { 'Content-Type': 'application/json' } })
+      )
+    );
     return;
   }
+
+  // NETWORK-FIRST for the app itself (HTML + navigations).
+  // This means GitHub updates show up on the very next load —
+  // the cache is only used when offline.
+  const isAppShell = e.request.mode === 'navigate' || url.endsWith('.html') || url.endsWith('/budgetos/') || url.endsWith('/budgetos');
+  if (isAppShell) {
+    e.respondWith(
+      fetch(e.request).then(res => {
+        if (res.ok) {
+          const clone = res.clone(); // clone synchronously, before body is consumed
+          caches.open(CACHE).then(c => c.put(e.request, clone));
+        }
+        return res;
+      }).catch(() => caches.match(e.request).then(c => c || caches.match('./index.html')))
+    );
+    return;
+  }
+
+  // CACHE-FIRST for static assets (icons, fonts) with background refresh
   e.respondWith(
     caches.match(e.request).then(cached => {
       const fresh = fetch(e.request).then(res => {
         if (res.ok && e.request.method === 'GET') {
-          caches.open(CACHE).then(c => c.put(e.request, res.clone()));
+          const clone = res.clone(); // clone synchronously
+          caches.open(CACHE).then(c => c.put(e.request, clone));
         }
         return res;
       }).catch(() => cached);
